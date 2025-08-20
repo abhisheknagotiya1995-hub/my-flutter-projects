@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4   # ✅ latest checkout
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -32,13 +32,13 @@ jobs:
         run: flutter build appbundle --release
 
       - name: Upload APK Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4   # ✅ updated version
         with:
           name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload AAB Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4   # ✅ updated version
         with:
           name: release-aab
           path: build/app/outputs/bundle/release/app-release.aab
