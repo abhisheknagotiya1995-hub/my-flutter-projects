@@ -28,8 +28,13 @@ jobs:
       - name: Analyze Project (ignore exit code)
         run: flutter analyze || true
 
-      - name: Run Tests
-        run: flutter test
+      - name: Run Tests (skip if no tests)
+        run: |
+          if [ -d "test" ]; then
+            flutter test
+          else
+            echo "⚠️ No test directory found, skipping tests."
+          fi
 
       - name: Build APK
         run: flutter build apk --release
