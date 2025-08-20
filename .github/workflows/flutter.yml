@@ -2,28 +2,34 @@ name: Flutter CI/CD (Android + Release)
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+    tags:
+      - "v*"   # v1.0.0 jaise tag par release banega
   pull_request:
-    branches: [ "main" ]
-  workflow_dispatch:
 
 jobs:
   build:
-    name: Build Android (APK & AAB)
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4   # ✅ latest checkout
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.3'   # ✅ Dart 3.6.1 included
+          flutter-version: '3.24.3'
           channel: 'stable'
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: flutter pub get
+
+      - name: Analyze Project
+        run: flutter analyze
+
+      - name: Run Tests
+        run: flutter test
 
       - name: Build APK
         run: flutter build apk --release
@@ -32,13 +38,41 @@ jobs:
         run: flutter build appbundle --release
 
       - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4   # ✅ updated version
+        uses: actions/upload-artifact@v4
         with:
           name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload AAB Artifact
-        uses: actions/upload-artifact@v4   # ✅ updated version
+        uses: actions/upload-artifact@v4
         with:
           name: release-aab
           path: build/app/outputs/bundle/release/app-release.aab
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download APK Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-apk
+          path: ./dist
+
+      - name: Download AAB Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-aab
+          path: ./dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/app-release.apk
+            dist/app-release.aab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
